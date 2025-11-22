@@ -46,7 +46,8 @@ public static class DependencyInjection
         services.AddScoped<IEmailSender, EmailService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IHouseService, HouseService>();
-        
+        services.AddScoped<IAmenityService, AmenityService>();
+        services.AddScoped<ILocationService, LocationService>();
 
         services.AddHttpContextAccessor();
 
