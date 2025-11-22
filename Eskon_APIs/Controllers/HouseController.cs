@@ -1,21 +1,44 @@
 ﻿using Eskon_APIs.Contracts.House;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace Eskon_APIs.Controllers;
 
+/// <summary>
+/// Manages house-related operations including viewing, creating, updating, and deleting houses.
+/// </summary>
 [Route("api/[controller]")]
 [ApiController]
+[Produces("application/json")]
 public class HouseController : ControllerBase
 {
     private readonly IHouseService _houseService;
+    
+    /// <summary>
+    /// Initializes a new instance of the HouseController.
+    /// </summary>
+    /// <param name="houseService">The house service for handling house operations.</param>
     public HouseController(IHouseService houseService)
     {
         _houseService = houseService;
     }
 
+    /// <summary>
+    /// Retrieves all available houses.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint returns a list of all houses with their summary information.
+    /// - Authenticated users will see which houses they have saved/favorited.
+    /// - Anonymous users will see all houses without any saved status.
+    /// </remarks>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>A list of house summary responses.</returns>
+    /// <response code="200">Returns the list of all houses.</response>
     [HttpGet("")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(List<HouseSummaryResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllHouses(CancellationToken cancellationToken)
     {
         var CurrentUserId = User.Identity?.IsAuthenticated == true
@@ -27,8 +50,31 @@ public class HouseController : ControllerBase
         return Ok(houses);
     }
 
+    /// <summary>
+    /// Creates a new house listing.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint allows authenticated members and administrators to create a new house listing.
+    /// The user making the request will be set as the owner of the house.
+    /// 
+    /// Requirements:
+    /// - User must be authenticated with role 'Member' or 'Admin'
+    /// - Title and Description are required
+    /// - Number of rooms must be between 0 and 50
+    /// - Number of bathrooms must be between 1 and 20
+    /// - Area must be between 1 and 10000 square units
+    /// </remarks>
+    /// <param name="request">The house creation request containing house details.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>The newly created house detail with generated ID.</returns>
+    /// <response code="201">House created successfully. Returns the created house details with the assigned ID.</response>
+    /// <response code="400">Bad request - validation failed (e.g., invalid input data).</response>
+    /// <response code="401">Unauthorized - user is not authenticated or has insufficient permissions.</response>
     [HttpPost("")]
     [Authorize(Roles = "Member, Admin")]
+    [ProducesResponseType(typeof(HouseDetailResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Create(CreateHouseRequest request, CancellationToken cancellationToken)
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -47,8 +93,29 @@ public class HouseController : ControllerBase
         return Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
     }
 
+    /// <summary>
+    /// Retrieves detailed information about a specific house.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint returns complete details of a house including:
+    /// - House information (title, description, price, rooms, bathrooms, area)
+    /// - Owner information
+    /// - Location details
+    /// - All amenities
+    /// - Image URLs
+    /// - Whether the current user has saved this house (if authenticated)
+    /// 
+    /// This endpoint is accessible to both authenticated and anonymous users.
+    /// </remarks>
+    /// <param name="id">The unique identifier of the house.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>Detailed house information.</returns>
+    /// <response code="200">Returns the house details.</response>
+    /// <response code="404">House not found.</response>
     [HttpGet("{id}")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(HouseDetailResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Get(int id, CancellationToken cancellationToken)
     {
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -59,8 +126,37 @@ public class HouseController : ControllerBase
             : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
     }
 
+    /// <summary>
+    /// Updates an existing house listing.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint allows the house owner or administrators to update house details.
+    /// The user making the request must be the owner of the house or an administrator.
+    /// 
+    /// Updatable fields:
+    /// - Title
+    /// - Description
+    /// - Price per month
+    /// - Number of rooms (0-50)
+    /// - Number of bathrooms (1-20)
+    /// - Area (1-10000 square units)
+    /// - Location
+    /// - Amenities
+    /// </remarks>
+    /// <param name="id">The unique identifier of the house to update.</param>
+    /// <param name="request">The house update request containing updated details.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>No content on success.</returns>
+    /// <response code="204">House updated successfully.</response>
+    /// <response code="400">Bad request - validation failed.</response>
+    /// <response code="401">Unauthorized - user is not authenticated or is not the house owner.</response>
+    /// <response code="404">House not found.</response>
     [HttpPut("{id}")]
     [Authorize(Roles = "Member, Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(int id, UpdateHouseRequest request, CancellationToken cancellationToken)
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -76,8 +172,30 @@ public class HouseController : ControllerBase
             : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
     }
 
+    /// <summary>
+    /// Deletes a house listing.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint allows the house owner or administrators to delete a house listing.
+    /// The user making the request must be the owner of the house or an administrator.
+    /// 
+    /// Deletion:
+    /// - Removes the house from the system
+    /// - Removes all associated amenities
+    /// - Removes from all users' saved/favorite lists
+    /// - Deletes all associated images
+    /// </remarks>
+    /// <param name="id">The unique identifier of the house to delete.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>No content on success.</returns>
+    /// <response code="204">House deleted successfully.</response>
+    /// <response code="401">Unauthorized - user is not authenticated or is not the house owner.</response>
+    /// <response code="404">House not found.</response>
     [HttpDelete("{id}")]
     [Authorize(Roles = "Member, Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
