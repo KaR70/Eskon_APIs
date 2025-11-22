@@ -22,5 +22,9 @@ public class MappingConfigurations : IRegister
                   ?? string.Empty)
             .Map(dest => dest.FormattedLocation,
                 src => string.Join(", ", new[] { src.Location.City, src.Location.Street }.Where(x => !string.IsNullOrWhiteSpace(x))));
+
+        config.NewConfig<House, HouseDetailResponse>()
+            .Map(dest => dest.Amenities, src => src.HouseAmenities.Select(ha => ha.Amenity))
+            .Map(dest => dest.ImageUrls, src => src.MediaItems.Select(mi => mi.URL));
     }
 }

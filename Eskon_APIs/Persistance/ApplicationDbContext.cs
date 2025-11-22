@@ -9,6 +9,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
     public DbSet<House> House { get; set; }
     public DbSet<SavedList> SavedList { get; set; }
+    public DbSet<Amenity> Amenity { get; set; }
+    public DbSet<Location> Location { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
