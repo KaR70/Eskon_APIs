@@ -48,6 +48,7 @@ public static class DependencyInjection
         services.AddScoped<IHouseService, HouseService>();
         services.AddScoped<IAmenityService, AmenityService>();
         services.AddScoped<ILocationService, LocationService>();
+        services.AddScoped<ISavedListService, SavedListService>();
 
         services.AddHttpContextAccessor();
 
