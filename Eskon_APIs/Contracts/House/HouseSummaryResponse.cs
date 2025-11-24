@@ -3,6 +3,7 @@
 public class HouseSummaryResponse
 {
     public int HouseId { get; set; }
+    public string OwnerId { get; set; }
     public string Title { get; set; }
     public decimal PricePerMonth { get; set; }
     public int NumberOfRooms { get; set; }

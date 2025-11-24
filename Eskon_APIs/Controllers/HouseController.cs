@@ -50,8 +50,32 @@ public class HouseController : ControllerBase
         return Ok(houses);
     }
 
+    /// <summary>
+    /// Retrieves all house listings owned by the current authenticated user.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint returns a list of all houses that belong to the authenticated user.
+    /// Only the owner of a house or an administrator can view their own listings.
+    /// 
+    /// Use this endpoint to:
+    /// - View all properties you have listed
+    /// - Manage your property inventory
+    /// - Monitor your active listings
+    /// 
+    /// Requirements:
+    /// - User must be authenticated with role 'Member' or 'Admin'
+    /// - User will only see their own listings
+    /// </remarks>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>A list of house summary responses owned by the current user.</returns>
+    /// <response code="200">Returns the list of user's house listings.</response>
+    /// <response code="401">Unauthorized - user is not authenticated.</response>
+    /// <response code="403">Forbidden - user does not have Member or Admin role.</response>
     [HttpGet("my-listings")]
     [Authorize(Roles = "Member, Admin")]
+    [ProducesResponseType(typeof(List<HouseSummaryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetMyListings(CancellationToken cancellationToken)
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
