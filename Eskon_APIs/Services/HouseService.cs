@@ -1,4 +1,5 @@
 ﻿using Eskon_APIs.Contracts.House;
+using Eskon_APIs.Entities;
 using Eskon_APIs.Errors;
 using Microsoft.EntityFrameworkCore;
 using System.Threading;
@@ -142,6 +143,34 @@ public class HouseService : IHouseService
         }
 
         return Result.Success(response);
+    }
+
+    public async Task<List<HouseSummaryResponse>> GetMyListingsAsync(string CurrentUserId, CancellationToken cancellationToken = default)
+    {
+        var myHouses = await _context.House
+            .AsNoTracking()
+            .Where(h => h.OwnerId == CurrentUserId)
+            .Include(h => h.MediaItems)
+            .Include(h => h.Location)
+            .ToListAsync(cancellationToken);
+
+
+        var savedHousesIds = CurrentUserId != null
+            ? await _context.SavedList
+            .Where(SavedList => SavedList.UserId == CurrentUserId)
+            .Select(SavedList => SavedList.HouseId)
+            .ToListAsync(cancellationToken) : new List<int>();
+
+
+        var houseSummaryResponses = myHouses.Adapt<List<HouseSummaryResponse>>();
+
+        foreach (var house in houseSummaryResponses)
+        {
+            house.IsSavedByCurrentUser = savedHousesIds.Contains(house.HouseId);
+        }
+
+        return houseSummaryResponses;
+
     }
 
     public async Task<Result> UpdateAsync(int id, UpdateHouseRequest request, string ownerId, CancellationToken cancellationToken = default)
