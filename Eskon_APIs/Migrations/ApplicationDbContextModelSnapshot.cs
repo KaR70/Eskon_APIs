@@ -48,7 +48,7 @@ namespace Eskon_APIs.Migrations
                     b.HasIndex("Category", "AmenityName")
                         .HasDatabaseName("IX_Amenity_Category_Name");
 
-                    b.ToTable("Amenity");
+                    b.ToTable("Amenity", (string)null);
 
                     b.HasData(
                         new
@@ -292,7 +292,7 @@ namespace Eskon_APIs.Migrations
 
                     b.HasIndex("LocationId", "PricePerMonth");
 
-                    b.ToTable("House");
+                    b.ToTable("House", (string)null);
 
                     b.HasData(
                         new
@@ -449,7 +449,7 @@ namespace Eskon_APIs.Migrations
 
                     b.HasIndex("AmenityId");
 
-                    b.ToTable("HouseAmenity");
+                    b.ToTable("HouseAmenity", (string)null);
                 });
 
             modelBuilder.Entity("Eskon_APIs.Entities.Location", b =>
@@ -497,7 +497,7 @@ namespace Eskon_APIs.Migrations
                     b.HasIndex("City", "Street", "BuildingNumber")
                         .HasDatabaseName("IX_Location_Address");
 
-                    b.ToTable("Location");
+                    b.ToTable("Location", (string)null);
 
                     b.HasData(
                         new
@@ -570,7 +570,7 @@ namespace Eskon_APIs.Migrations
 
                     b.HasIndex("HouseId", "SortOrder");
 
-                    b.ToTable("MediaItem");
+                    b.ToTable("MediaItem", (string)null);
                 });
 
             modelBuilder.Entity("Eskon_APIs.Entities.Review", b =>
@@ -607,7 +607,7 @@ namespace Eskon_APIs.Migrations
                     b.HasIndex("UserId", "HouseId")
                         .IsUnique();
 
-                    b.ToTable("Review");
+                    b.ToTable("Review", (string)null);
                 });
 
             modelBuilder.Entity("Eskon_APIs.Entities.SavedList", b =>
@@ -627,7 +627,7 @@ namespace Eskon_APIs.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SavedList");
+                    b.ToTable("SavedList", (string)null);
 
                     b.HasData(
                         new
@@ -753,7 +753,7 @@ namespace Eskon_APIs.Migrations
 
             modelBuilder.Entity("Eskon_APIs.Entities.ApplicationUser", b =>
                 {
-                    b.OwnsMany("Eskon_APIs.Entities.RefreshToken", "RefreshTokens", b1 =>
+                    b.OwnsMany("Eskon_APIs.Entities.ApplicationUser.RefreshTokens#Eskon_APIs.Entities.RefreshToken", "RefreshTokens", b1 =>
                         {
                             b1.Property<string>("UserId")
                                 .HasColumnType("nvarchar(450)");
