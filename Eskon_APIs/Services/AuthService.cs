@@ -49,8 +49,10 @@ public class AuthService(
             });
 
             await _userManager.UpdateAsync(user);
+            var isAdmin = userRoles.Contains("Admin");  // 👈 replace with your admin role name
 
-            var response = new AuthResponse(user.Id, user.Email, user.FirstName, user.LastName, token, expiresIn, refreshToken, refreshTokenExpiration);
+
+            var response = new AuthResponse(user.Id, user.Email, user.FirstName, user.LastName, token, expiresIn, refreshToken, refreshTokenExpiration,isAdmin);
 
             return Result.Success(response);
         }
@@ -89,10 +91,10 @@ public class AuthService(
             Token = newRefreshToken,
             ExpiresOn = refreshTokenExpiration
         });
-
+        var isAdmin = userRoles.Contains("Admin");  // 👈 replace with your admin role nam
         await _userManager.UpdateAsync(user);
 
-        var response = new AuthResponse(user.Id, user.Email, user.FirstName, user.LastName, newToken, expiresIn, newRefreshToken, refreshTokenExpiration);
+        var response = new AuthResponse(user.Id, user.Email, user.FirstName, user.LastName, newToken, expiresIn, newRefreshToken, refreshTokenExpiration,isAdmin);
 
         return Result.Success(response);
     }
