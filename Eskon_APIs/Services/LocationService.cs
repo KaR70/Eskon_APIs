@@ -22,6 +22,12 @@ public class LocationService : ILocationService
         return Result.Success(location.Adapt<LocationResponse>());
     }
 
+    public async Task<IEnumerable<LocationResponse>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        var locations = await _context.Location.ToListAsync(cancellationToken);
+        return locations.Adapt<IEnumerable<LocationResponse>>();
+    }
+
     public async Task<Result> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var location = await _context.Location.FindAsync(id, cancellationToken);

@@ -50,6 +50,21 @@ public class HouseController : ControllerBase
         return Ok(houses);
     }
 
+    [HttpGet("my-listings")]
+    [Authorize(Roles = "Member, Admin")]
+    public async Task<IActionResult> GetMyListings(CancellationToken cancellationToken)
+    {
+        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(ownerId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await _houseService.GetMyListingsAsync(ownerId, cancellationToken);
+
+        return Ok(result);
+    }
+
     /// <summary>
     /// Creates a new house listing.
     /// </summary>
