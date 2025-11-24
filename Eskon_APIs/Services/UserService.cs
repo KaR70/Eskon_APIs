@@ -19,25 +19,31 @@ public class UserService : IUserService
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<Result<UserProfileResponse>> GetProfileAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<Result<UserProfileResponse>> GetProfileAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
     {
-        
-        var profile = await _userManager.Users
+        var user = await _userManager.Users
             .AsNoTracking()
-            .Where(u => u.Id == userId)
-            .Select(u => new UserProfileResponse(
-                u.Email!,
-                u.UserName ?? string.Empty,
-                u.FirstName,
-                u.LastName
-            ))
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 
-        if (profile is null)
+        if (user is null)
             return Result.Failure<UserProfileResponse>(UserErrors.InvalidCredentials);
+
+        // Check if user is in the Admin role
+        bool isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+
+        var profile = new UserProfileResponse(
+            user.Email!,
+            user.UserName ?? string.Empty,
+            user.FirstName,
+            user.LastName,
+            isAdmin
+        );
 
         return Result.Success(profile);
     }
+
 
     public async Task<Result> ChangePasswordAsync(string userId, ChangePasswordRequest request)
     {
