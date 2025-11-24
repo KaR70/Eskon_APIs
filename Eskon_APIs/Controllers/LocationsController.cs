@@ -25,6 +25,36 @@ public class LocationsController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves all available locations.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint returns a list of all locations in the system with their complete information.
+    /// This includes:
+    /// - Country and City
+    /// - Street address and Building number
+    /// - Postal code (if available)
+    /// - Geographic coordinates (latitude and longitude, if available)
+    /// 
+    /// Use this endpoint to:
+    /// - Get a complete list of all available locations
+    /// - Populate dropdown menus or location selectors
+    /// - Browse all locations in the system
+    /// 
+    /// No authentication is required to view locations.
+    /// </remarks>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>A list of all available locations.</returns>
+    /// <response code="200">Returns the list of all locations.</response>
+    [HttpGet("")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(IEnumerable<LocationResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default)
+    {
+        var locations = await _locationService.GetAllAsync(cancellationToken);
+        return Ok(locations);
+    }
+
+    /// <summary>
     /// Retrieves a specific location by its ID.
     /// </summary>
     /// <remarks>
