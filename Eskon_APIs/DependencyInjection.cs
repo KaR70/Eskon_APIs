@@ -49,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<IAmenityService, AmenityService>();
         services.AddScoped<ILocationService, LocationService>();
         services.AddScoped<ISavedListService, SavedListService>();
+        services.AddScoped<IMediaService, MediaService>();
 
         services.AddHttpContextAccessor();
 
