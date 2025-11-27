@@ -1,4 +1,5 @@
 ﻿using Eskon_APIs.Contracts.House;
+using Eskon_APIs.Contracts.MediaItem;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -253,54 +254,160 @@ public class HouseController : ControllerBase
             : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
     }
 
+    /// <summary>
+    /// Uploads an image for a house listing.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint allows the house owner or administrators to upload images for a house listing.
+ /// 
+    /// Requirements:
+    /// - User must be authenticated with role 'Member' or 'Admin'
+    /// - User must be the owner of the house or an administrator
+    /// - The house must exist
+    /// - File must be a valid image (JPEG, PNG, WebP, etc.)
+    /// - File size should be within acceptable limits
+    /// 
+    /// Features:
+    /// - Supports multiple image uploads per house
+    /// - First uploaded image becomes the cover image by default
+    /// - Images are stored securely with unique identifiers
+    /// - Returns media item details including URL and sort order
+    /// 
+  /// The uploaded image will be assigned a unique media ID and can be:
+    /// - Set as the cover image using the set-cover endpoint
+    /// - Deleted using the delete endpoint
+    /// - Reordered within the gallery
+    /// </remarks>
+    /// <param name="houseId">The unique identifier of the house to upload an image for.</param>
+    /// <param name="file">The image file to upload. Must be sent as multipart/form-data.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>The uploaded media item details including the image URL.</returns>
+    /// <response code="200">Image uploaded successfully. Returns the media item details.</response>
+    /// <response code="400">Bad request - invalid file or missing required data.</response>
+    /// <response code="401">Unauthorized - user is not authenticated.</response>
+    /// <response code="403">Forbidden - user is not the house owner or admin.</response>
+    /// <response code="404">House not found.</response>
+    /// <response code="413">Payload too large - file exceeds size limit.</response>
     [HttpPost("{houseId}/images")]
     [Authorize(Roles = "Member, Admin")]
+    [ProducesResponseType(typeof(MediaItemResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status413PayloadTooLarge)]
+    [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadImage(int houseId, [FromForm] IFormFile file, CancellationToken cancellationToken)
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId))
         {
             return Unauthorized();
-        }
+ }
 
         var result = await _mediaService.UploadImageForHouseAsync(houseId, ownerId, file, cancellationToken);
 
         return result.IsSuccess
-            ? Ok(result.Value)
-            : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
+? Ok(result.Value)
+  : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
     }
 
+    /// <summary>
+ /// Deletes an image from a house listing.
+ /// </summary>
+    /// <remarks>
+    /// This endpoint allows the house owner or administrators to delete an image from a house listing.
+    /// 
+    /// Requirements:
+    /// - User must be authenticated with role 'Member' or 'Admin'
+    /// - User must be the owner of the house or an administrator
+    /// - The house must exist
+    /// - The media item must exist and belong to the specified house
+    /// 
+    /// Behavior:
+    /// - Deletes the image file from storage
+    /// - Removes the media item record from the database
+    /// - If the deleted image was the cover image, the system will assign a new cover image if available
+    /// - Returns no content on successful deletion
+    /// </remarks>
+    /// <param name="houseId">The unique identifier of the house containing the image.</param>
+    /// <param name="mediaItemId">The unique identifier of the media item to delete.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>No content on success.</returns>
+    /// <response code="204">Image deleted successfully.</response>
+    /// <response code="401">Unauthorized - user is not authenticated.</response>
+    /// <response code="403">Forbidden - user is not the house owner or admin.</response>
+    /// <response code="404">House or media item not found.</response>
     [HttpDelete("{houseId}/images/{mediaItemId}")]
     [Authorize(Roles = "Member, Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteImage(int houseId, int mediaItemId, CancellationToken cancellationToken)
     {
-        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(ownerId))
+     var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+      if (string.IsNullOrEmpty(ownerId))
         {
-            return Unauthorized();
-        }
+         return Unauthorized();
+   }
 
-        var result = await _mediaService.DeleteImageAsync(houseId, ownerId, mediaItemId, cancellationToken);
+var result = await _mediaService.DeleteImageAsync(houseId, ownerId, mediaItemId, cancellationToken);
 
-        return result.IsSuccess
-            ? NoContent()
-            : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
+     return result.IsSuccess
+       ? NoContent()
+      : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
     }
 
+    /// <summary>
+    /// Sets an image as the cover image for a house listing.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint allows the house owner or administrators to set a specific image as the cover/thumbnail image for a house listing.
+    /// 
+    /// Requirements:
+    /// - User must be authenticated with role 'Member' or 'Admin'
+    /// - User must be the owner of the house or an administrator
+    /// - The house must exist
+    /// - The media item must exist and belong to the specified house
+    /// 
+    /// Behavior:
+    /// - Sets the IsCover flag to true for the specified media item
+    /// - Automatically sets IsCover to false for any previously set cover image
+ /// - Only one image can be the cover image at a time
+    /// - The cover image is displayed as the thumbnail/main image for the house in listings
+    /// 
+    /// Best Practices:
+    /// - Set a high-quality, well-lit image as the cover
+  /// - Ensure the cover image effectively represents the property
+    /// - Update the cover image when you change the main presentation of the property
+    /// </remarks>
+    /// <param name="houseId">The unique identifier of the house.</param>
+    /// <param name="mediaItemId">The unique identifier of the media item to set as cover.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+/// <returns>No content on success.</returns>
+    /// <response code="204">Cover image set successfully.</response>
+    /// <response code="401">Unauthorized - user is not authenticated.</response>
+  /// <response code="403">Forbidden - user is not the house owner or admin.</response>
+    /// <response code="404">House or media item not found.</response>
     [HttpPut("{houseId}/images/{mediaItemId}/set-cover")]
     [Authorize(Roles = "Member, Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SetCoverImage(int houseId, int mediaItemId, CancellationToken cancellationToken)
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId))
-        {
-            return Unauthorized();
+ {
+        return Unauthorized();
         }
 
-        var result = await _mediaService.SetCoverImageAsync(houseId, ownerId, mediaItemId, cancellationToken);
+var result = await _mediaService.SetCoverImageAsync(houseId, ownerId, mediaItemId, cancellationToken);
 
-        return result.IsSuccess
-            ? NoContent()
-            : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
+     return result.IsSuccess
+     ? NoContent()
+ : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
     }
 }
