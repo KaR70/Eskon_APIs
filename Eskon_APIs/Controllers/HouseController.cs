@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace Eskon_APIs.Controllers;
@@ -15,14 +16,16 @@ namespace Eskon_APIs.Controllers;
 public class HouseController : ControllerBase
 {
     private readonly IHouseService _houseService;
-    
+    private readonly IMediaService _mediaService;
+
     /// <summary>
     /// Initializes a new instance of the HouseController.
     /// </summary>
     /// <param name="houseService">The house service for handling house operations.</param>
-    public HouseController(IHouseService houseService)
+    public HouseController(IHouseService houseService, IMediaService mediaService)
     {
         _houseService = houseService;
+        _mediaService = mediaService;
     }
 
     /// <summary>
@@ -244,6 +247,57 @@ public class HouseController : ControllerBase
         }
 
         var result = await _houseService.DeleteAsync(id, ownerId, cancellationToken);
+
+        return result.IsSuccess
+            ? NoContent()
+            : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
+    }
+
+    [HttpPost("{houseId}/images")]
+    [Authorize(Roles = "Member, Admin")]
+    public async Task<IActionResult> UploadImage(int houseId, [FromForm] IFormFile file, CancellationToken cancellationToken)
+    {
+        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(ownerId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await _mediaService.UploadImageForHouseAsync(houseId, ownerId, file, cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
+    }
+
+    [HttpDelete("{houseId}/images/{mediaItemId}")]
+    [Authorize(Roles = "Member, Admin")]
+    public async Task<IActionResult> DeleteImage(int houseId, int mediaItemId, CancellationToken cancellationToken)
+    {
+        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(ownerId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await _mediaService.DeleteImageAsync(houseId, ownerId, mediaItemId, cancellationToken);
+
+        return result.IsSuccess
+            ? NoContent()
+            : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
+    }
+
+    [HttpPut("{houseId}/images/{mediaItemId}/set-cover")]
+    [Authorize(Roles = "Member, Admin")]
+    public async Task<IActionResult> SetCoverImage(int houseId, int mediaItemId, CancellationToken cancellationToken)
+    {
+        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(ownerId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await _mediaService.SetCoverImageAsync(houseId, ownerId, mediaItemId, cancellationToken);
 
         return result.IsSuccess
             ? NoContent()
