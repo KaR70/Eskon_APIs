@@ -297,19 +297,19 @@ public class HouseController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status413PayloadTooLarge)]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> UploadImage(int houseId, [FromForm] IFormFile file, CancellationToken cancellationToken)
+    public async Task<IActionResult> UploadImage(int houseId, [FromForm] UploadImageRequest request, CancellationToken cancellationToken)
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId))
         {
             return Unauthorized();
- }
+        }
 
-        var result = await _mediaService.UploadImageForHouseAsync(houseId, ownerId, file, cancellationToken);
+        var result = await _mediaService.UploadImageForHouseAsync(houseId, ownerId, request.File, cancellationToken);
 
         return result.IsSuccess
-? Ok(result.Value)
-  : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
+            ? Ok(result.Value)
+            : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
     }
 
     /// <summary>
@@ -346,17 +346,17 @@ public class HouseController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteImage(int houseId, int mediaItemId, CancellationToken cancellationToken)
     {
-     var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-      if (string.IsNullOrEmpty(ownerId))
+        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(ownerId))
         {
-         return Unauthorized();
-   }
+            return Unauthorized();
+        }
 
-var result = await _mediaService.DeleteImageAsync(houseId, ownerId, mediaItemId, cancellationToken);
+        var result = await _mediaService.DeleteImageAsync(houseId, ownerId, mediaItemId, cancellationToken);
 
-     return result.IsSuccess
-       ? NoContent()
-      : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
+        return result.IsSuccess
+            ? NoContent()
+            : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
     }
 
     /// <summary>
@@ -395,7 +395,7 @@ var result = await _mediaService.DeleteImageAsync(houseId, ownerId, mediaItemId,
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-[ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SetCoverImage(int houseId, int mediaItemId, CancellationToken cancellationToken)
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -404,10 +404,10 @@ var result = await _mediaService.DeleteImageAsync(houseId, ownerId, mediaItemId,
         return Unauthorized();
         }
 
-var result = await _mediaService.SetCoverImageAsync(houseId, ownerId, mediaItemId, cancellationToken);
+        var result = await _mediaService.SetCoverImageAsync(houseId, ownerId, mediaItemId, cancellationToken);
 
-     return result.IsSuccess
-     ? NoContent()
- : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
+        return result.IsSuccess
+            ? NoContent()
+            : Problem(statusCode: result.Error.StatusCode, title: result.Error.Code, detail: result.Error.Description);
     }
 }
