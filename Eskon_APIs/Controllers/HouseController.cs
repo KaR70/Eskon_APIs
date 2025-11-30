@@ -400,8 +400,8 @@ public class HouseController : ControllerBase
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId))
- {
-        return Unauthorized();
+        {
+            return Unauthorized();
         }
 
         var result = await _mediaService.SetCoverImageAsync(houseId, ownerId, mediaItemId, cancellationToken);
