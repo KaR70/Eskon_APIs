@@ -5,7 +5,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Eskon_APIs/Dockerfile # Path to your Dockerfile
+      dockerfile: Eskon.Api/Dockerfile # Path to your Dockerfile
     container_name: eskon_api
     ports:
       # Map port 5000 on your computer to port 8080 inside the container

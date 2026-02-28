@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FluentValidation" Version="12.1.1" />
+      <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+      <PackageReference Include="MailKit" Version="4.15.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.24" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.24" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.24">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.24" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.24">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Eskon.Application\Eskon.Application.csproj" />
+      <ProjectReference Include="..\Eskon.Domain\Eskon.Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="Templates\EmailConfirmation.html">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Update="Templates\ForgetPassword.html">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Templates\ForgetPassword.html" />
+      <EmbeddedResource Include="Templates\ForgetPassword.html" />
+      <None Remove="Templates\EmailConfirmation.html" />
+      <EmbeddedResource Include="Templates\EmailConfirmation.html" />
+    </ItemGroup>
+
+</Project>

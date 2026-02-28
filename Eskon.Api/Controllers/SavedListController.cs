@@ -1,0 +1,109 @@
+﻿using Eskon.Api.Extensions;
+using Eskon.Application.Services;
+using Eskon.Domain.Abstraction;
+using Eskon.Domain.Errors;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Eskon.Api.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+[Authorize(Roles = "Member,Admin")]
+public class SavedListController : ControllerBase
+{
+    private readonly ISavedListService _savedListService;
+
+    public SavedListController(ISavedListService savedListService)
+    {
+        _savedListService = savedListService;
+    }
+
+    /// <summary>
+    /// Adds a house to the user's saved list.
+    /// </summary>
+    /// <param name="houseId">The ID of the house to save.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Success message.</returns>
+    /// <response code="200">House successfully saved.</response>
+    /// <response code="404">User or house not found.</response>
+    /// <response code="409">House already exists in saved list.</response>
+    [HttpPost("{houseId:int}")]
+    public async Task<IActionResult> Save(int houseId, CancellationToken cancellationToken)
+    {
+        var userId = User.GetUserId();
+        if (userId is null)
+            return Unauthorized();
+
+        var result = await _savedListService.SaveAsync(userId, houseId, cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(new { message = "House added to saved list." })
+            : result.ToProblem();
+    }
+
+    /// <summary>
+    /// Removes a saved house from the user's saved list.
+    /// </summary>
+    /// <param name="houseId">The ID of the house to remove.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Success message.</returns>
+    /// <response code="200">House successfully removed.</response>
+    /// <response code="404">User or saved item not found.</response>
+    [HttpDelete("{houseId:int}")]
+    public async Task<IActionResult> Unsave(int houseId, CancellationToken cancellationToken)
+    {
+        var userId = User.GetUserId();
+        if (userId is null)
+            return Unauthorized();
+
+        var result = await _savedListService.UnsaveAsync(userId, houseId, cancellationToken);
+    
+        return result.IsSuccess
+            ? Ok(new { message = "House removed from saved list." })
+            : result.ToProblem();
+    }
+
+    /// <summary>
+    /// Checks if a specific house is saved by the user.
+    /// </summary>
+    /// <param name="houseId">The ID of the house.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Boolean indicating if saved.</returns>
+    /// <response code="200">Returns whether the house is saved.</response>
+    /// <response code="404">User not found.</response>
+    [HttpGet("{houseId:int}")]
+    public async Task<IActionResult> IsSaved(int houseId, CancellationToken cancellationToken)
+    {
+        var userId = User.GetUserId();
+        if (userId is null)
+            return Unauthorized();
+
+        var result = await _savedListService.IsSavedAsync(userId, houseId, cancellationToken);
+        
+        return result.IsSuccess
+            ? Ok(new { isSaved = result.Value })
+            : result.ToProblem();
+    }
+
+    /// <summary>
+    /// Gets all saved houses for the current user.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of saved houses.</returns>
+    /// <response code="200">Returns the saved list.</response>
+    /// <response code="404">User not found.</response>
+    [HttpGet]
+    public async Task<IActionResult> GetSavedList(CancellationToken cancellationToken)
+    {
+        var userId = User.GetUserId();
+        if (userId is null)
+            return Unauthorized();
+
+        var result = await _savedListService.GetSavedHousesAsync(userId, cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : result.ToProblem();
+    }
+}
