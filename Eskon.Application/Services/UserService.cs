@@ -54,5 +54,41 @@ public class UserService : IUserService
         return Result.Failure(new Error(error.Code, error.Description, ErrorType.BadRequest));
     }
 
+    public async Task<Result> UpdateProfileAsync(string userId, UpdateProfileRequest request, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+
+        if (user is null)
+            return Result.Failure(UserErrors.NotFound);
+
+        user.FirstName = request.FirstName;
+        user.LastName = request.LastName;
+        user.UserName = request.UserName;
+
+        var result = await _userManager.UpdateAsync(user);
+
+        if (result.Succeeded)
+            return Result.Success();
+
+        var error = result.Errors.First();
+        return Result.Failure(new Error(error.Code, error.Description, ErrorType.BadRequest));
+    }
+
+    public async Task<Result> DeleteAccountAsync(string userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+
+        if (user is null)
+            return Result.Failure(UserErrors.NotFound);
+
+        var result = await _userManager.DeleteAsync(user);
+
+        if (result.Succeeded)
+            return Result.Success();
+
+        var error = result.Errors.First();
+        return Result.Failure(new Error(error.Code, error.Description, ErrorType.BadRequest));
+    }
+
 
 }
