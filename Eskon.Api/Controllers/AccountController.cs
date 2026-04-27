@@ -70,4 +70,60 @@ public class AccountController(IUserService userService, ILogger<AccountControll
 
         return result.IsSuccess ? NoContent() : result.ToProblem();
     }
+
+    /// <summary>
+    /// Updates the current authenticated user's profile information.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     PUT /account/update-profile
+    ///     {
+    ///       "firstName": "John",
+    ///       "lastName": "Doe",
+    ///       "userName": "johndoe"
+    ///     }
+    ///
+    /// This endpoint requires a valid JWT Bearer token in the Authorization header.
+    /// </remarks>
+    /// <param name="request">The update profile request containing first name, last name, and username</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation</param>
+    /// <returns>No content on success</returns>
+    /// <response code="204">Profile updated successfully</response>
+    /// <response code="400">Bad request - invalid input or validation failure</response>
+    /// <response code="401">Unauthorized - JWT token is missing or invalid</response>
+    /// <response code="404">User not found</response>
+    /// <response code="500">Internal server error while updating the profile</response>
+    [HttpPut("update-profile")]
+    [Consumes("application/json")]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _userService.UpdateProfileAsync(User.GetUserId()!, request, cancellationToken);
+
+        return result.IsSuccess ? NoContent() : result.ToProblem();
+    }
+
+    /// <summary>
+    /// Deletes the current authenticated user's account permanently.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     DELETE /account
+    ///
+    /// This endpoint requires a valid JWT Bearer token in the Authorization header.
+    /// The account and all associated data will be permanently removed.
+    /// </remarks>
+    /// <returns>No content on success</returns>
+    /// <response code="204">Account deleted successfully</response>
+    /// <response code="401">Unauthorized - JWT token is missing or invalid</response>
+    /// <response code="404">User not found</response>
+    /// <response code="500">Internal server error while deleting the account</response>
+    [HttpDelete("")]
+    public async Task<IActionResult> DeleteAccount()
+    {
+        var result = await _userService.DeleteAccountAsync(User.GetUserId()!);
+
+        return result.IsSuccess ? NoContent() : result.ToProblem();
+    }
 }

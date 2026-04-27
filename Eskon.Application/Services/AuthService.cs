@@ -132,6 +132,7 @@ public class AuthService(
             return Result.Failure(UserErrors.DuplicatedEmail);
 
         var user = request.Adapt<ApplicationUser>();
+        user.UserName = request.Email;
 
         var result = await userManager.CreateAsync(user, request.Password);
 

@@ -21,4 +21,7 @@ public static class UserErrors
 
     public static readonly Error DuplicatedConfirmation =
         new((string)(string)"User.DuplicatedConfirmation", (string)(string)"Email already confirmed", ErrorType.BadRequest);
+
+    public static readonly Error NotFound =
+        new("User.NotFound", "User not found", ErrorType.NotFound);
 }
