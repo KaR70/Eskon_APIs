@@ -7,14 +7,20 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
 COPY ["Eskon.Api/Eskon.Api.csproj", "Eskon.Api/"]
+COPY ["Eskon.Application/Eskon.Application.csproj", "Eskon.Application/"]
+COPY ["Eskon.Domain/Eskon.Domain.csproj", "Eskon.Domain/"]
+COPY ["Eskon.Infrastructure/Eskon.Infrastructure.csproj", "Eskon.Infrastructure/"]
+
 RUN dotnet restore "./Eskon.Api/Eskon.Api.csproj"
+
 COPY . .
+
 WORKDIR "/src/Eskon.Api"
 RUN dotnet build "./Eskon.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
