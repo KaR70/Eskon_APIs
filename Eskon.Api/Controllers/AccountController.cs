@@ -1,5 +1,6 @@
 using Eskon.Api.Extensions;
 using Eskon.Application.Contracts.Users;
+using Eskon.Application.Contracts.MediaItem;
 using Eskon.Application.Services;
 
 namespace Eskon.Api.Controllers;
@@ -123,6 +124,50 @@ public class AccountController(IUserService userService, ILogger<AccountControll
     public async Task<IActionResult> DeleteAccount()
     {
         var result = await _userService.DeleteAccountAsync(User.GetUserId()!);
+
+        return result.IsSuccess ? NoContent() : result.ToProblem();
+    }
+
+    /// <summary>
+    /// Uploads a profile picture for the current authenticated user.
+    /// </summary>
+    /// <remarks>
+    /// The file should be an image in one of the supported formats (jpg, jpeg, png, webp).
+    /// Maximum file size is 5MB.
+    /// Any existing profile picture will be replaced.
+    /// </remarks>
+    /// <param name="request">The upload image request containing the profile picture file</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation</param>
+    /// <returns>The URL of the uploaded profile picture</returns>
+    /// <response code="200">Profile picture uploaded successfully. Returns the image URL.</response>
+    /// <response code="400">Bad request - invalid file or file too large.</response>
+    /// <response code="401">Unauthorized - JWT token is missing or invalid.</response>
+    [HttpPost("profile-picture")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadProfilePicture([FromForm] UploadImageRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _userService.UploadProfilePictureAsync(User.GetUserId()!, request.File, cancellationToken);
+
+        return result.IsSuccess
+            ? Ok(new { profilePictureUrl = result.Value })
+            : result.ToProblem();
+    }
+
+    /// <summary>
+    /// Deletes the profile picture of the current authenticated user.
+    /// </summary>
+    /// <remarks>
+    /// This will remove the profile picture from storage and clear the profile picture URL from the user's profile.
+    /// </remarks>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation</param>
+    /// <returns>No content on success</returns>
+    /// <response code="204">Profile picture deleted successfully.</response>
+    /// <response code="404">No profile picture found.</response>
+    /// <response code="401">Unauthorized - JWT token is missing or invalid.</response>
+    [HttpDelete("profile-picture")]
+    public async Task<IActionResult> DeleteProfilePicture(CancellationToken cancellationToken)
+    {
+        var result = await _userService.DeleteProfilePictureAsync(User.GetUserId()!, cancellationToken);
 
         return result.IsSuccess ? NoContent() : result.ToProblem();
     }
