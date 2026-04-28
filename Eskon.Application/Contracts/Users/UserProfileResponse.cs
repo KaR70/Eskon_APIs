@@ -5,5 +5,6 @@ public record UserProfileResponse(
     string UserName,
     string FirstName,
     string LastName,
-    bool IsAdmin
+    bool IsAdmin,
+    string? ProfilePictureUrl
 );

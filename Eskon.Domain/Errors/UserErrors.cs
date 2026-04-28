@@ -24,4 +24,16 @@ public static class UserErrors
 
     public static readonly Error NotFound =
         new("User.NotFound", "User not found", ErrorType.NotFound);
+
+    public static readonly Error NoFile =
+        new("User.NoFile", "No file was provided.", ErrorType.BadRequest);
+
+    public static readonly Error FileTooLarge =
+        new("User.FileTooLarge", "File size cannot exceed 5MB.", ErrorType.BadRequest);
+
+    public static readonly Error InvalidFileType =
+        new("User.InvalidFileType", "Only .jpg, .jpeg, .png, and .webp files are allowed.", ErrorType.BadRequest);
+
+    public static readonly Error NoPictureToDelete =
+        new("User.NoPictureToDelete", "No profile picture found to delete.", ErrorType.NotFound);
 }

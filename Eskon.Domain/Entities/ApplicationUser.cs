@@ -6,6 +6,7 @@ public sealed class ApplicationUser:IdentityUser
     public string LastName { get; set; }=string.Empty;
 
     public bool IsDisabled { get; set; }
+    public string? ProfilePictureUrl { get; set; }
 
     public List<RefreshToken> RefreshTokens { get; set; } = [];
 
