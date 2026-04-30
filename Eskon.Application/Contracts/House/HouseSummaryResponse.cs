@@ -12,4 +12,5 @@ public class HouseSummaryResponse
     public string CoverImageUrl { get; set; }
     public string FormattedLocation { get; set; }
     public bool IsSavedByCurrentUser { get; set; }
+    public string Type { get; set; }
 }

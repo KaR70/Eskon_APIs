@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using Eskon.Domain.Enums;
 
 namespace Eskon.Domain.Entities
 {
@@ -15,6 +16,7 @@ namespace Eskon.Domain.Entities
         public double? AverageRating { get; set; }
         public int RatingCount { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public HouseType Type { get; set; }
 
 
         public string OwnerId { get; set; } = null!;

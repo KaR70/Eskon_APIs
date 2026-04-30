@@ -1,6 +1,6 @@
-﻿using Eskon.Application.Contracts.House;
-using Eskon.Domain.Abstraction;
+﻿using Eskon.Domain.Abstraction;
 using Eskon.Domain.Entities;
+using Eskon.Domain.Enums;
 using Eskon.Domain.Errors;
 using Mapster;
 
@@ -73,7 +73,7 @@ public class HouseService(IUnitOfWork unitOfWork) : IHouseService
         return Result.Success();
     }
 
-    public async Task<List<HouseSummaryResponse>> GetAllAsync(string? CurrentUserId, CancellationToken cancellationToken = default)
+    public async Task<Result<HomeResponse>> GetAllAsync(string? CurrentUserId, CancellationToken cancellationToken = default)
     {
         var houses = await unitOfWork.Houses.GetHousesSummariesAsync(cancellationToken);
        
@@ -87,7 +87,19 @@ public class HouseService(IUnitOfWork unitOfWork) : IHouseService
             house.IsSavedByCurrentUser = savedHousesIds.Contains(house.HouseId);
         }
 
-        return houseSummaryResponses;
+        var apartments = houseSummaryResponses
+            .Where(x => x.Type == nameof(HouseType.Apartment))
+            .ToList();
+        
+        var villas = houseSummaryResponses
+            .Where(x => x.Type == nameof(HouseType.Villa))
+            .ToList();
+        
+        var hotels = houseSummaryResponses
+            .Where(x => x.Type == nameof(HouseType.Hotel))
+            .ToList();
+        
+        return Result.Success(new HomeResponse(apartments, hotels, villas));
     }
 
     public async Task<Result<HouseDetailResponse>> GetAsync(int id, string? currentUserId, CancellationToken cancellationToken = default)

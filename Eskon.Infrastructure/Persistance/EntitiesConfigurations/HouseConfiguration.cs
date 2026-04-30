@@ -38,5 +38,6 @@ public class HouseConfiguration : IEntityTypeConfiguration<House>
         builder.HasIndex(h => h.LocationId);
         builder.HasIndex(h => h.PricePerMonth);
         builder.HasIndex(h => new { h.LocationId, h.PricePerMonth });
+        builder.HasIndex(x => x.Type);
     }
 }
