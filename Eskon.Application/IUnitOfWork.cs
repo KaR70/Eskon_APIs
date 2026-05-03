@@ -10,6 +10,7 @@ public interface IUnitOfWork : IDisposable
     ISavedListRepository SavedLists { get; }
     IHouseRepository Houses { get; }
     IMediaItemRepository MediaItems { get; }
+    IReviewRepository Reviews { get; }
     int Complete();
     Task<int> CompleteAsync();
 }

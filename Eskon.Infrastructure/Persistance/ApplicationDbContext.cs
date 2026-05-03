@@ -12,6 +12,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Amenity> Amenity { get; set; }
     public DbSet<Location> Location { get; set; }
     public DbSet<MediaItem> MediaItem { get; set; }
+    public DbSet<Review> Review { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
