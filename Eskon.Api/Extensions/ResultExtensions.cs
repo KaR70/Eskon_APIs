@@ -25,7 +25,7 @@ public static class ResultExtensions
         if (result.IsSuccess)
             throw new InvalidOperationException("Cannot create a problem from a successful result.");
 
-        // 1. Translate the domain ErrorType into an HTTP status code
+        
         var statusCode = result.Error.Type switch
         {
             ErrorType.NotFound => StatusCodes.Status404NotFound,
@@ -33,18 +33,19 @@ public static class ResultExtensions
             ErrorType.Conflict => StatusCodes.Status409Conflict,
             ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
             ErrorType.Forbidden => StatusCodes.Status403Forbidden,
+            ErrorType.BadRequest => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status500InternalServerError
         };
 
-        // 2. Directly create the ProblemDetails object. NO REFLECTION NEEDED.
+        
         var problemDetails = new ProblemDetails
         {
             Status = statusCode,
-            Title = result.Error.Code, // Using the code as the title is a good practice
+            Title = result.Error.Code,
             Detail = result.Error.Description
         };
 
-        // 3. Return it wrapped in an ObjectResult
+        
         return new ObjectResult(problemDetails)
         {
             StatusCode = statusCode

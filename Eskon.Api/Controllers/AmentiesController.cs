@@ -65,8 +65,9 @@ public class AmenitiesController : ControllerBase
     {
         var amenityResult = await _amenityService.GetAsync(id, cancellationToken);
    
-        return amenityResult.IsSuccess ? Ok(amenityResult.Value) : 
-   Problem(statusCode: StatusCodes.Status404NotFound, title: amenityResult.Error.Code, detail: amenityResult.Error.Description);
+        return amenityResult.IsSuccess 
+          ? Ok(amenityResult.Value) 
+          : Problem(statusCode: StatusCodes.Status404NotFound, title: amenityResult.Error.Code, detail: amenityResult.Error.Description);
     }
 
   /// <summary>

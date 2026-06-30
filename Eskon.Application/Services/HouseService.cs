@@ -35,6 +35,12 @@ public class HouseService(IUnitOfWork unitOfWork) : IHouseService
             });
         }
 
+        var result = house.SetOccupancy(request.IsShared, request.BedCount.GetValueOrDefault());
+
+        if(result.IsFailure)
+            return Result.Failure<HouseDetailResponse>(result.Error);
+
+
         await unitOfWork.Houses.CreateAsync(house, cancellationToken);
         await unitOfWork.CompleteAsync();
 
@@ -47,7 +53,7 @@ public class HouseService(IUnitOfWork unitOfWork) : IHouseService
 
         var response = createdHouseWithDetails.Adapt<HouseDetailResponse>();
 
-        response.isSavedByCurrrentUser = false;
+        response.IsSavedByCurrentUser = false;
 
         return Result.Success(response);
     }
@@ -113,11 +119,11 @@ public class HouseService(IUnitOfWork unitOfWork) : IHouseService
 
         if (string.IsNullOrEmpty(currentUserId))
         {
-            response.isSavedByCurrrentUser = false;
+            response.IsSavedByCurrentUser = false;
         }
         else
         {
-            response.isSavedByCurrrentUser =
+            response.IsSavedByCurrentUser =
                 await unitOfWork.SavedLists
                     .AnyAsync(s => s.HouseId == id && s.UserId == currentUserId, cancellationToken);
         }
@@ -172,6 +178,26 @@ public class HouseService(IUnitOfWork unitOfWork) : IHouseService
         {
             house.HouseAmenities.Add(new HouseAmenity { AmenityId = amenityId });
         }
+
+        await unitOfWork.CompleteAsync();
+
+        return Result.Success();
+    }
+
+    public async Task<Result> UpdateOccupancyAsync(SetOccupancyTypeRequest request, int houseId, string ownerId, CancellationToken cancellationToken)
+    {
+        var house = await unitOfWork.Houses.GetByIdAsync(houseId, cancellationToken);
+
+        if(house is null)
+            return Result.Failure(HouseErrors.HouseNotFound);
+
+        if(house.OwnerId != ownerId)
+            return Result.Failure(HouseErrors.NotOwner);
+        
+        var result = house.SetOccupancy(request.isShared, request.BedCount);
+
+        if(result.IsFailure)
+            return Result.Failure(result.Error);
 
         await unitOfWork.CompleteAsync();
 
