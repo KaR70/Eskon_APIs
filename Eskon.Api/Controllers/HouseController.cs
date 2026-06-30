@@ -53,7 +53,7 @@ public class HouseController : ControllerBase
 
         var houses = await _houseService.GetAllAsync(CurrentUserId, cancellationToken);
 
-        return Ok(houses);
+        return Ok(houses.Value);
     }
 
     /// <summary>
@@ -108,9 +108,28 @@ public class HouseController : ControllerBase
     /// - Number of rooms must be between 0 and 50
     /// - Number of bathrooms must be between 1 and 20
     /// - Area must be between 1 and 10000 square units
+    /// - Shared occupancy is controlled by the IsShared flag
+    /// - If IsShared is true, BedCount must be at least 1
+    /// - For non-shared properties, BedCount should be omitted or set to 0
     /// </remarks>
-    /// <param name="request">The house creation request containing house details.</param>
+    /// <param name="request">The house creation request containing title, description, pricing, room details, shared occupancy, location, and amenities.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <example>
+    /// <code>
+    /// {
+    ///   "title": "Bright Apartment",
+    ///   "description": "A modern apartment with a balcony",
+    ///   "pricePerMonth": 1200,
+    ///   "numberOfRooms": 2,
+    ///   "numberOfBathrooms": 1,
+    ///   "area": 95,
+    ///   "isShared": true,
+    ///   "bedCount": 2,
+    ///   "locationId": 1,
+    ///   "amenityIds": [1, 3, 5]
+    /// }
+    /// </code>
+    /// </example>
     /// <returns>The newly created house detail with generated ID.</returns>
     /// <response code="201">House created successfully. Returns the created house details with the assigned ID.</response>
     /// <response code="400">Bad request - validation failed (e.g., invalid input data).</response>
@@ -168,14 +187,14 @@ public class HouseController : ControllerBase
 
         return result.IsSuccess
             ? Ok(result.Value)
-            : result.ToProblem();;
+            : result.ToProblem();
     }
 
     /// <summary>
     /// Updates an existing house listing.
     /// </summary>
     /// <remarks>
-    /// This endpoint allows the house owner or administrators to update house details.
+    /// This endpoint allows the house owner or administrators to update general house details.
     /// The user making the request must be the owner of the house or an administrator.
     /// 
     /// Updatable fields:
@@ -187,10 +206,26 @@ public class HouseController : ControllerBase
     /// - Area (1-10000 square units)
     /// - Location
     /// - Amenities
+    /// 
+    /// Shared occupancy is not included in this payload. Use the occupancy endpoint to update shared status and bed count separately.
     /// </remarks>
     /// <param name="id">The unique identifier of the house to update.</param>
-    /// <param name="request">The house update request containing updated details.</param>
+    /// <param name="request">The house update request containing general house details such as title, description, pricing, room counts, area, location, and amenities.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <example>
+    /// <code>
+    /// {
+    ///   "title": "Updated Apartment",
+    ///   "description": "Renovated apartment with better lighting",
+    ///   "pricePerMonth": 1350,
+    ///   "numberOfRooms": 3,
+    ///   "numberOfBathrooms": 2,
+    ///   "area": 110,
+    ///   "locationId": 2,
+    ///   "amenityIds": [1, 4, 7]
+    /// }
+    /// </code>
+    /// </example>
     /// <returns>No content on success.</returns>
     /// <response code="204">House updated successfully.</response>
     /// <response code="400">Bad request - validation failed.</response>
@@ -214,7 +249,7 @@ public class HouseController : ControllerBase
 
         return result.IsSuccess
             ? NoContent()
-            : result.ToProblem();;
+            : result.ToProblem();
     }
 
     /// <summary>
@@ -253,7 +288,7 @@ public class HouseController : ControllerBase
 
         return result.IsSuccess
             ? NoContent()
-            : result.ToProblem();;
+            : result.ToProblem();
     }
 
     /// <summary>
@@ -262,13 +297,13 @@ public class HouseController : ControllerBase
     /// <remarks>
     /// This endpoint allows the house owner or administrators to upload images for a house listing.
  /// 
-    /// Requirements:
+    /// Requirements:P@ssword123
     /// - User must be authenticated with role 'Member' or 'Admin'
     /// - User must be the owner of the house or an administrator
     /// - The house must exist
     /// - File must be a valid image (JPEG, PNG, WebP, etc.)
     /// - File size should be within acceptable limits
-    /// 
+    /// P@ssword123
     /// Features:
     /// - Supports multiple image uploads per house
     /// - First uploaded image becomes the cover image by default
@@ -407,6 +442,66 @@ public class HouseController : ControllerBase
         }
 
         var result = await _mediaService.SetCoverImageAsync(houseId, ownerId, mediaItemId, cancellationToken);
+
+        return result.IsSuccess
+            ? NoContent()
+            : result.ToProblem();
+    }
+
+    /// <summary>
+    /// Updates the occupancy configuration for a house listing.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint allows the house owner or administrators to update whether a property is shared and how many beds it has.
+    /// 
+    /// Requirements:
+    /// - User must be authenticated with role 'Member' or 'Admin'
+    /// - User must be the owner of the house or an administrator
+    /// - The house must exist
+    /// - For shared housing, at least one bed must be provided
+    /// 
+    /// Behavior:
+    /// - Sets the shared occupancy flag on the house
+    /// - Sets the bed count when the property is shared
+    /// - Resets the bed count to zero for non-shared housing
+    /// </remarks>
+    /// <param name="houseId">The unique identifier of the house to update.</param>
+    /// <param name="request">The occupancy update request containing the shared status and bed count.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <example>
+    /// <code>
+    /// {
+    ///   "isShared": true,
+    ///   "bedCount": 2
+    /// }
+    /// </code>
+    /// </example>
+    /// <returns>No content on success.</returns>
+    /// <response code="204">Occupancy updated successfully.</response>
+    /// <response code="400">Bad request - validation failed or occupancy data is invalid.</response>
+    /// <response code="401">Unauthorized - user is not authenticated.</response>
+    /// <response code="403">Forbidden - user is not the house owner or admin.</response>
+    /// <response code="404">House not found.</response>
+    [HttpPut("{houseId}/occupancy")]
+    [Authorize(Roles = "Member, Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateOccupancy(
+        [FromRoute] int houseId, 
+        [FromBody] SetOccupancyTypeRequest request, 
+        CancellationToken cancellationToken)
+    {
+        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(ownerId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await _houseService.UpdateOccupancyAsync(request, houseId, ownerId, cancellationToken);
 
         return result.IsSuccess
             ? NoContent()

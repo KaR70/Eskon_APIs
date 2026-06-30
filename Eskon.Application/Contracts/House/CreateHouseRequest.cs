@@ -17,6 +17,9 @@ public class CreateHouseRequest
     [Range(1, 10000)]
     public double Area { get; set; }
 
+    public bool IsShared { get; set; }
+    public int? BedCount { get; set; }
+
     public int LocationId { get; set; }
 
     public List<int> AmenityIds { get; set; } = new();

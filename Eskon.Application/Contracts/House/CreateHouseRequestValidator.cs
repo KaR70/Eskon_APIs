@@ -25,5 +25,10 @@ public class CreateHouseRequestValidator : AbstractValidator<CreateHouseRequest>
 
         RuleFor(x => x.LocationId)
             .NotEmpty();
+        
+        RuleFor(x => x.BedCount)
+            .GreaterThanOrEqualTo(1)
+            .When(x => x.IsShared)
+            .WithMessage("Shared housing requires at least one bed.");
     }
 }

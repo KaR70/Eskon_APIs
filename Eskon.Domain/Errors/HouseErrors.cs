@@ -12,4 +12,7 @@ public static class HouseErrors
         new((string)(string)"House.NotFound", (string)(string)"The house with the specified ID was not found.", ErrorType.NotFound);
     public static readonly Error NotOwner = 
         new((string)(string)"House.NotOwner", (string)(string)"You are not authorized to perform this action on the specified house.", ErrorType.Forbidden);
+    public static readonly Error InsuffecientNumberOfBeds = 
+        new((string)(string)"House.InsuffecientNumberOfBeds", (string)(string)"Insuffecient number of beds", ErrorType.BadRequest);
 }
+

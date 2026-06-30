@@ -10,4 +10,5 @@ public interface IHouseService
     Task<Result<HouseDetailResponse>> CreateAsync(CreateHouseRequest request, string ownerId, CancellationToken cancellationToken = default);
     Task<Result> UpdateAsync(int id, UpdateHouseRequest request, string ownerId, CancellationToken cancellationToken = default);
     Task<Result> DeleteAsync(int id, string ownerId, CancellationToken cancellationToken = default);
+    Task<Result> UpdateOccupancyAsync(SetOccupancyTypeRequest request, int houseId, string ownerId, CancellationToken cancellationToken);
 }

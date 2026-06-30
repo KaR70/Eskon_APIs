@@ -13,6 +13,8 @@ public class HouseDetailResponse
     public int NumberOfRooms { get; set; }
     public int NumberOfBathrooms { get; set; }
     public double Area { get; set; }
+    public bool IsShared { get; set; }
+    public int? BedCount { get; set; }
 
     public HouseOwnerResponse Owner { get; set; }
 
@@ -22,5 +24,6 @@ public class HouseDetailResponse
 
     public List<AmenityResponse> Amenities { get; set; } = new();
 
-    public bool isSavedByCurrrentUser { get; set; }
+    public bool IsSavedByCurrentUser { get; set; }
+
 }
